@@ -58,6 +58,67 @@ def _seed_admin():
     print('✅ 默认管理员: admin / admin123')
 
 
+def _seed_test_data():
+    from app.models import RoomType, Room, OrderRecord
+    from datetime import datetime, timedelta
+    from random import choice, randint, uniform
+
+    if RoomType.query.first() is not None:
+        return
+
+    types_data = [
+        ('标准单人间', 198, 'WiFi,电视,空调,独立卫浴'),
+        ('豪华大床房', 358, 'WiFi,电视,空调,冰箱,浴缸,迷你吧'),
+        ('商务双床房', 298, 'WiFi,电视,空调,办公桌,保险箱'),
+        ('行政套房', 588, 'WiFi,电视,空调,冰箱,浴缸,客厅,迷你吧,保险箱'),
+        ('总统套房', 1288, 'WiFi,电视,空调,冰箱,浴缸,客厅,书房,迷你吧,保险箱,桑拿'),
+    ]
+    room_types = []
+    for name, price, facility in types_data:
+        rt = RoomType(type_name=name, base_price=price, facility=facility)
+        db.session.add(rt)
+        db.session.flush()
+        room_types.append(rt)
+
+    statuses = ['available'] * 6 + ['occupied'] * 3 + ['reserved'] * 1
+    for floor in range(1, 4):
+        for num in range(1, 11):
+            room_num = f'{floor}{num:02d}'
+            rt = choice(room_types[:3]) if num <= 7 else choice(room_types[2:])
+            room = Room(
+                room_num=room_num, type_id=rt.id, floor=floor,
+                price=rt.base_price * round(uniform(0.9, 1.1), 2),
+                status=choice(statuses),
+            )
+            db.session.add(room)
+
+    db.session.flush()
+
+    all_rooms = Room.query.all()
+    names = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十',
+             '郑强', '王芳', '刘伟', '陈静', '杨洋', '黄磊', '朱丽']
+    phones = ['138', '139', '136', '137', '158', '159', '186', '187']
+
+    for i in range(40):
+        room = choice(all_rooms)
+        days_ago = randint(0, 29)
+        check_in = datetime.now() - timedelta(days=days_ago, hours=randint(8, 18))
+        stay_days = randint(1, 5)
+        check_out = check_in + timedelta(days=stay_days)
+        order = OrderRecord(
+            customer_name=choice(names),
+            phone=choice(phones) + str(randint(10000000, 99999999)),
+            room_id=room.id, check_in=check_in, check_out=check_out,
+            total_fee=room.price * stay_days,
+            order_status=choice(['completed', 'completed', 'confirmed', 'cancelled']),
+            create_time=check_in,
+        )
+        db.session.add(order)
+
+    db.session.commit()
+    print('✅ 测试数据已初始化: 5 房型, 30 客房, 40 订单')
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
@@ -92,6 +153,7 @@ def create_app():
     with app.app_context():
         db.create_all()
         _seed_admin()
+        _seed_test_data()
 
     @app.context_processor
     def inject_permissions():
