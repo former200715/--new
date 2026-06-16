@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}用户管理 - NEXUS HOTEL{% endblock %}
+{% block page_title %}用户管理{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('admin.user_add') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> 添加用户</a>
+<a href="{{ url_for('admin.role_list') }}" class="btn btn-ghost btn-sm"><i class="fas fa-shield-alt"></i> 角色管理</a>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-body" style="padding:0">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>姓名</th>
+                    <th>角色</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td style="font-family:var(--font-mono);color:var(--text-muted)">#{{ user.id }}</td>
+                    <td style="font-weight:600">{{ user.username }}</td>
+                    <td>{{ user.name }}</td>
+                    <td><span style="color:var(--accent)">{{ user.role.role_name if user.role else '-' }}</span></td>
+                    <td><span class="badge badge-{{ user.status }}">
+                        {% if user.status == 'enabled' %}启用{% else %}禁用{% endif %}
+                    </span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">{{ user.create_time.strftime('%Y-%m-%d') if user.create_time else '-' }}</td>
+                    <td>
+                        <div style="display:flex;gap:6px">
+                            <a href="{{ url_for('admin.user_edit', id=user.id) }}" class="btn btn-ghost btn-sm" data-tooltip="编辑用户"><i class="fas fa-edit"></i></a>
+                            <a href="{{ url_for('admin.reset_password', id=user.id) }}" class="btn btn-ghost btn-sm" data-tooltip="重置密码"><i class="fas fa-key"></i></a>
+                            <form method="POST" action="{{ url_for('admin.toggle_user', id=user.id) }}" style="display:inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm {% if user.status == 'enabled' %}btn-danger{% else %}btn-success{% endif %}" data-tooltip="{% if user.status == 'enabled' %}禁用账号{% else %}启用账号{% endif %}">
+                                    {% if user.status == 'enabled' %}<i class="fas fa-ban"></i>{% else %}<i class="fas fa-check"></i>{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

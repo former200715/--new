@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}入住登记 - NEXUS HOTEL{% endblock %}
+{% block page_title %}入住登记{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto">
+    <a href="{{ url_for('bookings.order_list') }}" class="btn btn-ghost" style="margin-bottom:20px"><i class="fas fa-arrow-left"></i> 返回订单列表</a>
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    <label class="form-label">{{ form.room_id.label.text }}</label>
+                    {{ form.room_id(class="form-control") }}
+                    {% for e in form.room_id.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.customer_name.label.text }}</label>
+                    {{ form.customer_name(class="form-control", placeholder="客户姓名") }}
+                    {% for e in form.customer_name.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.phone.label.text }}</label>
+                    {{ form.phone(class="form-control", placeholder="11位手机号") }}
+                    {% for e in form.phone.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.check_out.label.text }}</label>
+                    {{ form.check_out(class="form-control", type="date") }}
+                    {% for e in form.check_out.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.remark.label.text }}</label>
+                    {{ form.remark(class="form-control", placeholder="可选备注") }}
+                </div>
+                <div style="display:flex;gap:12px;margin-top:24px">
+                    {{ form.submit(class="btn btn-success") }}
+                    <a href="{{ url_for('bookings.order_list') }}" class="btn btn-ghost">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

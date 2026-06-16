@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}控制台 - NEXUS HOTEL{% endblock %}
+{% block page_title %}控制台{% endblock %}
+
+{% block content %}
+<!-- 统计卡片 -->
+<div class="stats-grid">
+    <div class="stat-card stat-accent">
+        <div class="stat-header">
+            <span class="stat-label">客房总数</span>
+            <div class="stat-icon"><i class="fas fa-door-open"></i></div>
+        </div>
+        <div class="stat-value">{{ total_rooms }}</div>
+        <div class="stat-sub">全部在册客房</div>
+    </div>
+    <div class="stat-card stat-green">
+        <div class="stat-header">
+            <span class="stat-label">空闲客房</span>
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="stat-value">{{ available_rooms }}</div>
+        <div class="stat-sub">可预订状态</div>
+    </div>
+    <div class="stat-card stat-red">
+        <div class="stat-header">
+            <span class="stat-label">已入住</span>
+            <div class="stat-icon"><i class="fas fa-bed"></i></div>
+        </div>
+        <div class="stat-value">{{ occupied_rooms }}</div>
+        <div class="stat-sub">当前在住</div>
+    </div>
+    <div class="stat-card stat-orange">
+        <div class="stat-header">
+            <span class="stat-label">待处理订单</span>
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        </div>
+        <div class="stat-value">{{ pending_orders }}</div>
+        <div class="stat-sub">需要确认</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <!-- 房型分布 -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title">房型分布</span>
+        </div>
+        <div class="panel-body">
+            {% if type_stats %}
+            {% for ts in type_stats %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-color)">
+                <div>
+                    <div style="font-weight:600;font-size:14px">{{ ts.name }}</div>
+                    <div style="font-size:12px;color:var(--text-muted)">¥{{ ts.price }}/晚</div>
+                </div>
+                <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--accent)">{{ ts.count }}</div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="text-align:center;color:var(--text-muted);padding:20px">暂无房型数据</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 最近订单 -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title">最近订单</span>
+            <a href="{{ url_for('bookings.order_list') }}" class="btn btn-ghost btn-sm">查看全部</a>
+        </div>
+        <div class="panel-body" style="padding:0">
+            {% if recent_orders %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>订单号</th>
+                        <th>客户</th>
+                        <th>状态</th>
+                        <th>金额</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td style="font-family:var(--font-mono);color:var(--accent)">#{{ order.id }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td><span class="badge badge-{{ order.order_status }}">{{ order.order_status }}</span></td>
+                        <td style="font-family:var(--font-mono);color:var(--green)">¥{{ "%.0f"|format(order.total_fee) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align:center;color:var(--text-muted);padding:30px">暂无订单数据</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 快捷操作 -->
+<div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+    <a href="{{ url_for('bookings.checkin') }}" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> 快速入住</a>
+    <a href="{{ url_for('rooms.room_list') }}" class="btn btn-ghost"><i class="fas fa-door-open"></i> 客房管理</a>
+    <a href="{{ url_for('stats.dashboard') }}" class="btn btn-ghost"><i class="fas fa-chart-bar"></i> 数据统计</a>
+</div>
+{% endblock %}

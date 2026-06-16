@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - NEXUS HOTEL{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto">
+    <a href="{{ url_for('rooms.room_list') }}" class="btn btn-ghost" style="margin-bottom:20px"><i class="fas fa-arrow-left"></i> 返回客房列表</a>
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    <label class="form-label">{{ form.room_num.label.text }}</label>
+                    {{ form.room_num(class="form-control", placeholder="如 1001") }}
+                    {% for e in form.room_num.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.type_id.label.text }}</label>
+                    {{ form.type_id(class="form-control") }}
+                    {% for e in form.type_id.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">{{ form.floor.label.text }}</label>
+                        {{ form.floor(class="form-control", placeholder="楼层") }}
+                        {% for e in form.floor.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{{ form.price.label.text }}</label>
+                        {{ form.price(class="form-control", placeholder="元/晚") }}
+                        {% for e in form.price.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.status.label.text }}</label>
+                    {{ form.status(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.remark.label.text }}</label>
+                    {{ form.remark(class="form-control", placeholder="可选备注") }}
+                </div>
+                <div style="display:flex;gap:12px;margin-top:24px">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('rooms.room_list') }}" class="btn btn-ghost">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

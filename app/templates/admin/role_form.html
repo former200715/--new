@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - NEXUS HOTEL{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:500px;margin:0 auto">
+    <a href="{{ url_for('admin.role_list') }}" class="btn btn-ghost" style="margin-bottom:20px"><i class="fas fa-arrow-left"></i> 返回角色列表</a>
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    <label class="form-label">{{ form.role_name.label.text }}</label>
+                    {{ form.role_name(class="form-control", placeholder="角色名称") }}
+                    {% for e in form.role_name.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="margin-bottom:12px">权限配置</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                        {% for perm_key, perm_label in permissions %}
+                        <label class="form-check" style="padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-xs)">
+                            <input type="checkbox" name="perm_{{ perm_key }}" id="perm_{{ perm_key }}">
+                            <span style="font-size:13px;color:var(--text-secondary)">{{ perm_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:24px">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('admin.role_list') }}" class="btn btn-ghost">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

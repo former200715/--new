@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}数据统计 - NEXUS HOTEL{% endblock %}
+{% block page_title %}数据统计{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="chart-grid">
+    <div class="chart-card">
+        <div class="chart-title">房间状态分布</div>
+        <div class="chart-wrapper"><canvas id="roomStatusChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">房型分布</div>
+        <div class="chart-wrapper"><canvas id="roomTypeChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">近30天订单趋势</div>
+        <div class="chart-wrapper"><canvas id="orderTrendChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">近7天收入（元）</div>
+        <div class="chart-wrapper"><canvas id="revenueChart"></canvas></div>
+    </div>
+    <div class="chart-card" style="grid-column:1/-1">
+        <div class="chart-title">楼层入住率</div>
+        <div class="chart-wrapper"><canvas id="floorChart"></canvas></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chartColors = {
+    cyan: '#00d4ff',
+    green: '#00ff88',
+    red: '#ff3366',
+    orange: '#ff9f43',
+    purple: '#a855f7',
+    grid: '#1e2d42',
+    text: '#8899aa'
+};
+
+const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { color: chartColors.text, padding: 16 } } }
+};
+
+const axisOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false }
+    },
+    scales: {
+        x: { ticks: { color: chartColors.text }, grid: { color: chartColors.grid } },
+        y: { ticks: { color: chartColors.text }, grid: { color: chartColors.grid }, beginAtZero: true }
+    }
+};
+
+async function loadChart(url, canvasId, type, extraOpts = {}) {
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const colors = [chartColors.cyan, chartColors.green, chartColors.red, chartColors.orange, chartColors.purple];
+        const isPie = type === 'pie' || type === 'doughnut';
+
+        new Chart(ctx, {
+            type,
+            data: {
+                labels: data.labels || data.map(d => d.floor),
+                datasets: [{
+                    data: data.values || data.map(d => d.rate),
+                    backgroundColor: isPie ? colors : (type === 'line' ? chartColors.cyan + '22' : chartColors.cyan),
+                    borderColor: type === 'line' ? chartColors.cyan : (type === 'bar' ? chartColors.cyan : 'transparent'),
+                    borderWidth: type === 'line' ? 2 : (type === 'bar' ? 0 : 0),
+                    tension: 0.3,
+                    fill: type === 'line',
+                    pointBackgroundColor: chartColors.cyan,
+                    ...extraOpts
+                }]
+            },
+            options: isPie ? pieOptions : axisOptions
+        });
+    } catch(e) { console.error(url, e); }
+}
+
+loadChart('/stats/api/room-status', 'roomStatusChart', 'doughnut');
+loadChart('/stats/api/room-type-distribution', 'roomTypeChart', 'pie');
+loadChart('/stats/api/order-trend', 'orderTrendChart', 'line');
+loadChart('/stats/api/revenue', 'revenueChart', 'bar', { backgroundColor: chartColors.green, borderColor: chartColors.green });
+
+// 楼层入住率
+fetch('/stats/api/floor-occupancy')
+    .then(r => r.json())
+    .then(data => {
+        const ctx = document.getElementById('floorChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.floor),
+                datasets: [{
+                    label: '入住率 %',
+                    data: data.map(d => d.rate),
+                    backgroundColor: data.map(d => d.rate > 80 ? chartColors.red : d.rate > 50 ? chartColors.orange : chartColors.green),
+                    borderRadius: 4,
+                    maxBarThickness: 48
+                }]
+            },
+            options: {
+                ...axisOptions,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `入住率: ${ctx.raw}% (${data[ctx.dataIndex].occupied}/${data[ctx.dataIndex].total}间)`
+                        }
+                    }
+                },
+                scales: {
+                    ...axisOptions.scales,
+                    y: { ...axisOptions.scales.y, max: 100, ticks: { ...axisOptions.scales.y.ticks, callback: v => v + '%' } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

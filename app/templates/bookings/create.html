@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}预订客房 - NEXUS HOTEL{% endblock %}
+{% block page_title %}预订客房{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto">
+    <a href="{{ url_for('rooms.room_list') }}" class="btn btn-ghost" style="margin-bottom:20px"><i class="fas fa-arrow-left"></i> 返回客房列表</a>
+    <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header">
+            <span class="panel-title">房间信息</span>
+        </div>
+        <div class="panel-body">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--accent)">{{ room.room_num }}</div>
+                    <div style="color:var(--text-secondary);margin-top:4px">{{ room.room_type.type_name if room.room_type else '' }} · {{ room.floor }}F</div>
+                </div>
+                <div style="font-family:var(--font-mono);font-size:24px;font-weight:700;color:var(--green)">¥{{ "%.0f"|format(room.price) }}<span style="font-size:12px;color:var(--text-muted)">/晚</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                {{ form.room_id() }}
+                <div class="form-group">
+                    <label class="form-label">{{ form.customer_name.label.text }}</label>
+                    {{ form.customer_name(class="form-control", placeholder="客户姓名") }}
+                    {% for e in form.customer_name.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.phone.label.text }}</label>
+                    {{ form.phone(class="form-control", placeholder="11位手机号") }}
+                    {% for e in form.phone.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">{{ form.check_in.label.text }}</label>
+                        {{ form.check_in(class="form-control", type="date") }}
+                        {% for e in form.check_in.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{{ form.check_out.label.text }}</label>
+                        {{ form.check_out(class="form-control", type="date") }}
+                        {% for e in form.check_out.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:24px">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('rooms.room_list') }}" class="btn btn-ghost">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

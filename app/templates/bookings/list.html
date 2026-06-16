@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}订单管理 - NEXUS HOTEL{% endblock %}
+{% block page_title %}订单管理{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('bookings.checkin') }}" class="btn btn-primary btn-sm"><i class="fas fa-sign-in-alt"></i> 入住登记</a>
+{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <a href="{{ url_for('bookings.order_list') }}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-ghost{% endif %}">全部</a>
+    <a href="{{ url_for('bookings.order_list', status='pending') }}" class="btn btn-sm {% if current_status == 'pending' %}btn-warning{% else %}btn-ghost{% endif %}">待确认</a>
+    <a href="{{ url_for('bookings.order_list', status='confirmed') }}" class="btn btn-sm {% if current_status == 'confirmed' %}btn-primary{% else %}btn-ghost{% endif %}">已确认</a>
+    <a href="{{ url_for('bookings.order_list', status='completed') }}" class="btn btn-sm {% if current_status == 'completed' %}btn-success{% else %}btn-ghost{% endif %}">已完成</a>
+    <a href="{{ url_for('bookings.order_list', status='cancelled') }}" class="btn btn-sm {% if current_status == 'cancelled' %}btn-danger{% else %}btn-ghost{% endif %}">已取消</a>
+</div>
+
+<div class="panel">
+    <div class="panel-body" style="padding:0">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>订单号</th>
+                    <th>客户</th>
+                    <th>电话</th>
+                    <th>房间</th>
+                    <th>入住</th>
+                    <th>退房</th>
+                    <th>金额</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in pagination.items %}
+                <tr>
+                    <td style="font-family:var(--font-mono);color:var(--accent)">#{{ order.id }}</td>
+                    <td>{{ order.customer_name }}</td>
+                    <td style="color:var(--text-secondary)">{{ order.phone }}</td>
+                    <td style="font-family:var(--font-mono)">{{ order.room.room_num if order.room else '-' }}</td>
+                    <td style="font-size:12px;color:var(--text-secondary)">{{ order.check_in.strftime('%m-%d %H:%M') if order.check_in else '-' }}</td>
+                    <td style="font-size:12px;color:var(--text-secondary)">{{ order.check_out.strftime('%m-%d %H:%M') if order.check_out else '-' }}</td>
+                    <td style="font-family:var(--font-mono);color:var(--green)">¥{{ "%.0f"|format(order.total_fee) }}</td>
+                    <td><span class="badge badge-{{ order.order_status }}">
+                        {% if order.order_status == 'pending' %}待确认
+                        {% elif order.order_status == 'confirmed' %}已确认
+                        {% elif order.order_status == 'completed' %}已完成
+                        {% else %}已取消{% endif %}
+                    </span></td>
+                    <td>
+                        {% if order.order_status == 'pending' %}
+                        <form method="POST" action="{{ url_for('bookings.cancel', id=order.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定取消？')">取消</button>
+                        </form>
+                        {% elif order.order_status == 'confirmed' %}
+                        <form method="POST" action="{{ url_for('bookings.checkout', id=order.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="order_id" value="{{ order.id }}">
+                            <input type="hidden" name="payment_method" value="cash">
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('确认退房结账？')">结账</button>
+                        </form>
+                        {% else %}
+                        <span style="color:var(--text-muted);font-size:12px">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:40px">暂无订单数据</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('bookings.order_list', page=pagination.prev_num, status=current_status) }}" data-tooltip="上一页"><i class="fas fa-chevron-left"></i></a>
+    {% endif %}
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if p %}
+    <a href="{{ url_for('bookings.order_list', page=p, status=current_status) }}" class="{% if p == pagination.page %}active{% endif %}">{{ p }}</a>
+    {% else %}<span>…</span>{% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for('bookings.order_list', page=pagination.next_num, status=current_status) }}" data-tooltip="下一页"><i class="fas fa-chevron-right"></i></a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

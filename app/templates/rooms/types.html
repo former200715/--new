@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}房型管理 - NEXUS HOTEL{% endblock %}
+{% block page_title %}房型管理{% endblock %}
+
+{% block top_actions %}
+{% if has_perm('room_type:manage') %}
+<a href="{{ url_for('rooms.type_add') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> 添加房型</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-body" style="padding:0">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>类型名称</th>
+                    <th>基础价格</th>
+                    <th>房间数量</th>
+                    <th>配套设施</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in types %}
+                <tr>
+                    <td style="font-weight:600">{{ t.type_name }}</td>
+                    <td style="font-family:var(--font-mono);color:var(--green)">¥{{ "%.0f"|format(t.base_price) }}/晚</td>
+                    <td style="font-family:var(--font-mono);color:var(--accent)">{{ t.rooms.count() }}</td>
+                    <td style="color:var(--text-secondary);max-width:300px">{{ t.facility or '-' }}</td>
+                    <td>
+                        {% if has_perm('room_type:manage') %}
+                        <a href="{{ url_for('rooms.type_edit', id=t.id) }}" class="btn btn-ghost btn-sm" data-tooltip="编辑房型"><i class="fas fa-edit"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">暂无房型数据</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}客房管理 - NEXUS HOTEL{% endblock %}
+{% block page_title %}客房管理{% endblock %}
+
+{% block top_actions %}
+{% if has_perm('room:manage') %}
+<a href="{{ url_for('rooms.room_add') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> 添加客房</a>
+<a href="{{ url_for('rooms.type_list') }}" class="btn btn-ghost btn-sm"><i class="fas fa-tags"></i> 房型管理</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- 筛选栏 -->
+<div class="filter-bar">
+    <a href="{{ url_for('rooms.room_list') }}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-ghost{% endif %}">全部</a>
+    <a href="{{ url_for('rooms.room_list', status='available') }}" class="btn btn-sm {% if current_status == 'available' %}btn-success{% else %}btn-ghost{% endif %}">
+        <i class="fas fa-circle" style="font-size:8px;color:var(--green)"></i> 空闲
+    </a>
+    <a href="{{ url_for('rooms.room_list', status='occupied') }}" class="btn btn-sm {% if current_status == 'occupied' %}btn-danger{% else %}btn-ghost{% endif %}">
+        <i class="fas fa-circle" style="font-size:8px;color:var(--red)"></i> 已入住
+    </a>
+    <a href="{{ url_for('rooms.room_list', status='reserved') }}" class="btn btn-sm {% if current_status == 'reserved' %}btn-warning{% else %}btn-ghost{% endif %}">
+        <i class="fas fa-circle" style="font-size:8px;color:var(--orange)"></i> 已预订
+    </a>
+    <a href="{{ url_for('rooms.room_list', status='maintenance') }}" class="btn btn-sm {% if current_status == 'maintenance' %}btn-warning{% else %}btn-ghost{% endif %}">
+        <i class="fas fa-circle" style="font-size:8px;color:var(--purple)"></i> 维护中
+    </a>
+</div>
+
+<!-- 房间网格 -->
+<div class="room-grid">
+    {% for room in pagination.items %}
+    <div class="room-card" data-status="{{ room.status }}">
+        <div class="room-card-header">
+            <div>
+                <div class="room-number">{{ room.room_num }}</div>
+                <div class="room-floor">{{ room.floor }}F</div>
+            </div>
+            <span class="badge badge-{{ room.status }}">
+                {% if room.status == 'available' %}空闲
+                {% elif room.status == 'occupied' %}已入住
+                {% elif room.status == 'reserved' %}已预订
+                {% else %}维护中{% endif %}
+            </span>
+        </div>
+        <div class="room-type">{{ room.room_type.type_name if room.room_type else '未知' }}</div>
+        <div class="room-price">¥{{ "%.0f"|format(room.price) }} <span>/晚</span></div>
+        {% if room.room_type and room.room_type.facility %}
+        <div class="room-facility">
+            {% for f in room.room_type.facility.split(',')[:4] %}
+            <span class="facility-tag">{{ f.strip() }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="room-actions">
+            {% if room.status == 'available' %}
+            <a href="{{ url_for('bookings.create_order', room_id=room.id) }}" class="btn btn-primary btn-sm" style="flex:1;justify-content:center">预订</a>
+            {% endif %}
+            {% if has_perm('room:manage') %}
+            <a href="{{ url_for('rooms.room_edit', id=room.id) }}" class="btn btn-ghost btn-sm" data-tooltip="编辑房间"><i class="fas fa-edit"></i></a>
+            <form method="POST" action="{{ url_for('rooms.room_delete', id=room.id) }}" style="display:inline"
+                  onsubmit="return confirm('确定删除此房间？')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger btn-sm btn-icon" data-tooltip="删除房间"><i class="fas fa-trash"></i></button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)">
+        <i class="fas fa-door-open" style="font-size:48px;margin-bottom:16px;display:block"></i>
+        暂无客房数据
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 分页 -->
+{% if pagination.pages > 1 %}
+<div class="pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('rooms.room_list', page=pagination.prev_num, status=current_status) }}" data-tooltip="上一页"><i class="fas fa-chevron-left"></i></a>
+    {% endif %}
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if p %}
+    <a href="{{ url_for('rooms.room_list', page=p, status=current_status) }}" class="{% if p == pagination.page %}active{% endif %}">{{ p }}</a>
+    {% else %}
+    <span>…</span>
+    {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for('rooms.room_list', page=pagination.next_num, status=current_status) }}" data-tooltip="下一页"><i class="fas fa-chevron-right"></i></a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
